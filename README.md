@@ -20,6 +20,14 @@ Preview your HTML files quickly by clicking the preview button in the top right 
 
 ![open-preview-btn](https://raw.githubusercontent.com/microsoft/vscode-livepreview/main/img/open-preview-btn.gif)
 ![open-context-menu](https://raw.githubusercontent.com/microsoft/vscode-livepreview/main/img/open-context-menu.gif)
+
+You can also open an HTML file straight into the embedded preview through the editor's **Open With…** menu (right-click the file > _Open With…_ > **Live Preview**). To make Live Preview the default editor for HTML files, add an [editor association](https://code.visualstudio.com/docs/getstarted/userinterface#_preview-mode) to your settings:
+
+```jsonc
+"workbench.editorAssociations": {
+    "*.html": "livePreview.htmlPreview"
+}
+```
 ### Embedded Preview
 A preview is available in-editor for the files hosted by the server.
 

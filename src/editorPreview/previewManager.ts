@@ -65,8 +65,10 @@ export class PreviewManager extends Disposable {
 	): Promise<void> {
 		const path = file ? await this._fileUriToPath(file, connection) : '/';
 
-		// Check if we should use the integrated browser instead
-		if (await SettingUtil.shouldUseIntegratedBrowser()) {
+		// When a panel is supplied (e.g. by the custom editor or a restored panel), render into
+		// it directly. Only divert to the integrated browser when we would create our own panel,
+		// otherwise the supplied editor slot would be left blank.
+		if (!panel && (await SettingUtil.shouldUseIntegratedBrowser())) {
 			const url = `http://${connection.host}:${connection.httpPort}${path}?vscode-livepreview=true`;
 			await vscode.commands.executeCommand(INTEGRATED_BROWSER_COMMAND, {
 				url,
@@ -76,8 +78,8 @@ export class PreviewManager extends Disposable {
 			return;
 		}
 
-		// If we already have a panel, show it.
-		if (this.currentPanel) {
+		// If we already have a panel and weren't handed one to use, show the existing one.
+		if (!panel && this.currentPanel) {
 			await this.currentPanel.reveal(
 				vscode.ViewColumn.Beside,
 				path,

@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Added a "Live Preview" custom editor so HTML files can be opened directly in the embedded preview via the editor "Open With…" menu, or set as the default editor for HTML through `workbench.editorAssociations`.
+
 ## 0.4.19 (May 12, 2026)
 
 - Addresses [CVE-2026-41612](https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-41612)

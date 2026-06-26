@@ -14,6 +14,7 @@ import {
 	SettingUtil,
 } from './utils/settingsUtil';
 import { IOpenFileOptions, Manager } from './manager';
+import { PreviewEditorProvider } from './editorPreview/previewEditorProvider';
 
 let reporter: TelemetryReporter;
 let serverPreview: Manager;
@@ -40,6 +41,21 @@ export function activate(context: vscode.ExtensionContext): void {
 	);
 
 	context.subscriptions.push(reporter);
+
+	// Register the custom editor so HTML files can be opened directly in the Live Preview
+	// through the "Open With…" menu or a `workbench.editorAssociations` entry.
+	context.subscriptions.push(
+		vscode.window.registerCustomEditorProvider(
+			PreviewEditorProvider.viewType,
+			new PreviewEditorProvider((panel, file) =>
+				serverPreview.openPreviewInPanel(panel, file)
+			),
+			{
+				webviewOptions: { retainContextWhenHidden: true },
+				supportsMultipleEditorsPerDocument: true,
+			}
+		)
+	);
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand(`${SETTINGS_SECTION_ID}.start`, async () => {

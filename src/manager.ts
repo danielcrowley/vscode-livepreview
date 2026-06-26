@@ -345,6 +345,25 @@ export class Manager extends Disposable {
 		}
 	}
 
+	/**
+	 * Loads the embedded preview into an externally-provided webview panel. Used by the
+	 * custom editor (`PreviewEditorProvider`) so that opening an HTML file via "Open With…"
+	 * or an editor association renders the preview directly in that editor slot.
+	 * @param panel the webview panel supplied by VS Code for the editor.
+	 * @param file the HTML file to preview.
+	 */
+	public async openPreviewInPanel(
+		panel: vscode.WebviewPanel,
+		file: vscode.Uri
+	): Promise<void> {
+		panel.webview.options = this._previewManager.getWebviewOptions();
+		const workspace = await PathUtil.GetWorkspaceFromURI(file);
+		const serverGrouping = await this._getServerGroupingFromWorkspace(
+			(await this._shouldUseWorkspaceForFile(workspace, file)) ? workspace : undefined
+		);
+		await serverGrouping.createOrShowEmbeddedPreview(panel, file);
+	}
+
 	public async openPreviewAtFileUri(
 		file?: vscode.Uri,
 		options?: IOpenFileOptions,

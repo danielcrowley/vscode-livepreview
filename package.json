@@ -43,6 +43,21 @@
   "l10n": "./l10n",
   "main": "./out/extension.js",
   "contributes": {
+    "customEditors": [
+      {
+        "viewType": "livePreview.htmlPreview",
+        "displayName": "%customEditors.htmlPreview%",
+        "selector": [
+          {
+            "filenamePattern": "*.html"
+          },
+          {
+            "filenamePattern": "*.htm"
+          }
+        ],
+        "priority": "option"
+      }
+    ],
     "commands": [
       {
         "command": "livePreview.start",
