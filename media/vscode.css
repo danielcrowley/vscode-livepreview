@@ -70,6 +70,12 @@ iframe {
 	height: 100%;
 }
 
+/* Used by the file-locked custom editor preview: hide the browser navigation bar
+   so only the previewed page is shown and it stays fixed on that file. */
+.hide-toolbar .header {
+	display: none;
+}
+
 .displayContents > div {
 	display: table-row;
 	width: 100%;

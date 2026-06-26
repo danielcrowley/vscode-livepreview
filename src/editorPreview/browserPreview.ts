@@ -47,7 +47,8 @@ export class BrowserPreview extends Disposable {
 		private readonly _extensionUri: vscode.Uri,
 		private readonly _reporter: TelemetryReporter,
 		private readonly _connectionManager: ConnectionManager,
-		private readonly _outputChannel: vscode.OutputChannel
+		private readonly _outputChannel: vscode.OutputChannel,
+		hideToolbar = false
 	) {
 		super();
 		this._panel.iconPath = {
@@ -69,7 +70,8 @@ export class BrowserPreview extends Disposable {
 				initialConnection,
 				_panel,
 				_extensionUri,
-				_connectionManager
+				_connectionManager,
+				hideToolbar
 			)
 		);
 

@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Added a "Live Preview" custom editor so HTML files can be opened directly in the embedded preview via the editor "Open With…" menu, or set as the default editor for HTML through `workbench.editorAssociations`.
+- Added a "Live Preview" custom editor so HTML files can be opened directly in the embedded preview via the editor "Open With…" menu, or set as the default editor for HTML through `workbench.editorAssociations`. These previews hide the browser navigation bar and stay fixed on the opened file, and opening another HTML file launches its own preview panel.
 
 ## 0.4.19 (May 12, 2026)
 

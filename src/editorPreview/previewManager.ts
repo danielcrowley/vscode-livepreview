@@ -28,6 +28,9 @@ export class PreviewManager extends Disposable {
 	private readonly _outputChannel: vscode.OutputChannel;
 	public previewActive = false;
 	public currentPanel: BrowserPreview | undefined;
+	// Previews locked to a single file (opened via the custom editor). Each is independent of
+	// `currentPanel`, so opening another HTML file spawns its own panel rather than reusing one.
+	private readonly _fixedPreviews = new Set<BrowserPreview>();
 	private _notifiedAboutLooseFiles = false;
 	private _currentTimeout: NodeJS.Timeout | undefined;
 
@@ -61,13 +64,21 @@ export class PreviewManager extends Disposable {
 	public async launchFileInEmbeddedPreview(
 		panel: vscode.WebviewPanel | undefined,
 		connection: Connection,
-		file?: vscode.Uri
+		file?: vscode.Uri,
+		fixedToFile = false
 	): Promise<void> {
 		const path = file ? await this._fileUriToPath(file, connection) : '/';
 
-		// When a panel is supplied (e.g. by the custom editor or a restored panel), render into
-		// it directly. Only divert to the integrated browser when we would create our own panel,
-		// otherwise the supplied editor slot would be left blank.
+		// A file-locked preview (custom editor) always renders into its own supplied panel with the
+		// browser toolbar hidden, and is tracked separately so it is never reused for another file.
+		if (fixedToFile && panel) {
+			this._startFixedPreview(panel, path, connection);
+			return;
+		}
+
+		// When a panel is supplied (e.g. by a restored panel), render into it directly. Only divert
+		// to the integrated browser when we would create our own panel, otherwise the supplied
+		// editor slot would be left blank.
 		if (!panel && (await SettingUtil.shouldUseIntegratedBrowser())) {
 			const url = `http://${connection.host}:${connection.httpPort}${path}?vscode-livepreview=true`;
 			await vscode.commands.executeCommand(INTEGRATED_BROWSER_COMMAND, {
@@ -235,18 +246,75 @@ export class PreviewManager extends Disposable {
 		this._register(
 			this.currentPanel.onDispose(() => {
 				this.currentPanel = undefined;
-				const closeServerDelay =
-					SettingUtil.GetConfig().serverKeepAliveAfterEmbeddedPreviewClose;
-				if (closeServerDelay !== 0) {
-					this._currentTimeout = setTimeout(() => {
-						this._serverExpired();
-
-						this.previewActive = false;
-					}, Math.floor(closeServerDelay * 1000 * 60));
-				}
 				listener.dispose();
+				this._scheduleServerExpiryIfNoPreviews();
 			})
 		);
+	}
+
+	/**
+	 * Open a preview that is locked to a single file (custom editor). Unlike `_startEmbeddedPreview`,
+	 * this does not become the shared `currentPanel`, so each opened file gets its own panel, and the
+	 * browser toolbar is hidden so the preview stays fixed on that file.
+	 * @param {vscode.WebviewPanel} panel the panel supplied by VS Code for the editor.
+	 * @param {string} file the path to preview (should already be encoded).
+	 * @param {Connection} connection the connection to connect using.
+	 */
+	private _startFixedPreview(
+		panel: vscode.WebviewPanel,
+		file: string,
+		connection: Connection
+	): void {
+		if (this._currentTimeout) {
+			clearTimeout(this._currentTimeout);
+		}
+
+		const preview = this._register(
+			new BrowserPreview(
+				file,
+				connection,
+				panel,
+				this._extensionUri,
+				this._reporter,
+				this._connectionManager,
+				this._outputChannel,
+				true // hide the browser toolbar; the preview is fixed to this file
+			)
+		);
+		this._fixedPreviews.add(preview);
+
+		const listener = preview.onShouldLaunchPreview((e) =>
+			this._onShouldLaunchPreview.fire(e)
+		);
+
+		this.previewActive = true;
+
+		this._register(
+			preview.onDispose(() => {
+				this._fixedPreviews.delete(preview);
+				listener.dispose();
+				this._scheduleServerExpiryIfNoPreviews();
+			})
+		);
+	}
+
+	/**
+	 * Once no previews (shared or file-locked) remain open, start the timer that shuts the server
+	 * down, as configured by `serverKeepAliveAfterEmbeddedPreviewClose`.
+	 */
+	private _scheduleServerExpiryIfNoPreviews(): void {
+		if (this.currentPanel || this._fixedPreviews.size > 0) {
+			return;
+		}
+		const closeServerDelay =
+			SettingUtil.GetConfig().serverKeepAliveAfterEmbeddedPreviewClose;
+		if (closeServerDelay !== 0) {
+			this._currentTimeout = setTimeout(() => {
+				this._serverExpired();
+
+				this.previewActive = false;
+			}, Math.floor(closeServerDelay * 1000 * 60));
+		}
 	}
 	/**
 	 * @returns {vscode.WebviewPanelOptions} the webview panel options to allow it to always retain context.

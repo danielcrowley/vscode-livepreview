@@ -39,6 +39,7 @@ export interface ILaunchInfo {
 	debug: boolean;
 	panel?: vscode.WebviewPanel;
 	connection: Connection;
+	fixedToFile?: boolean;
 }
 
 interface IExternalPreviewArgs {
@@ -51,6 +52,7 @@ interface IEmbeddedPreviewArgs {
 	uri?: vscode.Uri;
 	panel: vscode.WebviewPanel | undefined;
 	connection: Connection;
+	fixedToFile?: boolean;
 }
 
 export class ServerGrouping extends Disposable {
@@ -127,6 +129,7 @@ export class ServerGrouping extends Disposable {
 						uri: this._pendingLaunchInfo.uri,
 						panel: this._pendingLaunchInfo.panel,
 						connection: this._connection,
+						fixedToFile: this._pendingLaunchInfo.fixedToFile,
 					});
 				}
 
@@ -254,11 +257,14 @@ export class ServerGrouping extends Disposable {
 	 * @param {string} file the filesystem path to open in the preview.
 	 * @param {boolean} relative whether the path was absolute or relative to the current workspace.
 	 * @param {boolean} debug whether to run in debug mode (not implemented).
+	 * @param {boolean} fixedToFile whether the preview is locked to this file (custom editor):
+	 *  it hides the browser toolbar and opens in its own dedicated panel.
 	 */
 	public async createOrShowEmbeddedPreview(
 		panel: vscode.WebviewPanel | undefined = undefined,
 		file?: vscode.Uri,
-		debug = false
+		debug = false,
+		fixedToFile = false
 	): Promise<void> {
 		if (!this.isRunning) {
 			// set the pending launch info, which will trigger once the server starts in `launchFileInEmbeddedPreview`
@@ -268,6 +274,7 @@ export class ServerGrouping extends Disposable {
 				uri: file,
 				debug: debug,
 				connection: this._connection,
+				fixedToFile: fixedToFile,
 			};
 			await this.openServer();
 		} else {
@@ -275,6 +282,7 @@ export class ServerGrouping extends Disposable {
 				uri: file,
 				panel,
 				connection: this._connection,
+				fixedToFile: fixedToFile,
 			});
 		}
 	}

@@ -361,7 +361,7 @@ export class Manager extends Disposable {
 		const serverGrouping = await this._getServerGroupingFromWorkspace(
 			(await this._shouldUseWorkspaceForFile(workspace, file)) ? workspace : undefined
 		);
-		await serverGrouping.createOrShowEmbeddedPreview(panel, file);
+		await serverGrouping.createOrShowEmbeddedPreview(panel, file, false, true);
 	}
 
 	public async openPreviewAtFileUri(
@@ -650,7 +650,8 @@ export class Manager extends Disposable {
 					this._previewManager.launchFileInEmbeddedPreview(
 						e.panel,
 						e.connection,
-						e.uri
+						e.uri,
+						e.fixedToFile
 					)
 				)
 			);

@@ -33,7 +33,8 @@ export class WebviewComm extends Disposable {
 		public currentConnection: Connection,
 		private readonly _panel: vscode.WebviewPanel,
 		private readonly _extensionUri: vscode.Uri,
-		private readonly _connectionManager: ConnectionManager
+		private readonly _connectionManager: ConnectionManager,
+		private readonly _hideToolbar = false
 	) {
 		super();
 
@@ -235,7 +236,7 @@ export class WebviewComm extends Disposable {
 
 				<title>${INIT_PANEL_TITLE}</title>
 			</head>
-			<body>
+			<body class="${this._hideToolbar ? 'hide-toolbar' : ''}">
 			<div class="displayContents">
 				<div class="header">
 					<div class="headercontent">
